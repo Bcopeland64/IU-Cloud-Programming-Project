@@ -168,12 +168,26 @@ resource "aws_lb_target_group" "target-group" {
 
 resource "aws_lb" "load_balancer" {
   name               = "load-balancer"
-  ip_address_type = "ipv4"
+  ip_address_type    = "ipv4"
   internal           = false
   load_balancer_type = "application"
   security_groups    = [aws_security_group.public_security_group.id]
-  subnets            = [aws_subnet.public_subnet.id]
+  subnets            = data.aws_subnet_ids.public_subnet.ids
 
   enable_deletion_protection = false
 }
+
+resource "aws_lb_listener" "listener" {
+  load_balancer_arn = aws_lb.load_balancer.arn
+  port              = "80"
+  protocol          = "HTTP"
+
+  default_action {
+    target_group_arn = aws_lb_target_group.target-group.arn
+    type             = "forward"
+  }
+}
  
+ data "aws_subnet_ids" "public_subnet" {
+  vpc_id = aws_vpc.main_vpc.id
+ }
